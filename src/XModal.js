@@ -1,188 +1,83 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 function XModal() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    phone: '',
-    dob: ''
-  });
-
-  const [errors, setErrors] = useState({});
-
-  // Refs for inputs and error messages
+  const [modalOpen, setModalOpen] = useState(false);
   const usernameRef = useRef(null);
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
   const dobRef = useRef(null);
-  const errorRefs = useRef([]);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      // Focus on the username input when the modal opens
-      if (usernameRef.current) {
-        usernameRef.current.focus();
-      }
-    }
-  }, [isModalOpen]);
-
-  useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      // Scroll to the first error message
-      const firstErrorRef = errorRefs.current.find(ref => ref);
-      if (firstErrorRef) {
-        firstErrorRef.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [errors]);
+  const formRef = useRef(null);
 
   const handleOpenModal = () => {
-    setIsModalOpen(true);
+    setModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setFormData({
-      username: '',
-      email: '',
-      phone: '',
-      dob: ''
-    });
-    setErrors({});
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value
-    });
-  };
-
-  const validateForm = () => {
-    let tempErrors = {};
-
-    if (!formData.username) {
-      tempErrors.username = 'Username is required';
+  const handleOutsideClick = (e) => {
+    if (formRef.current && !formRef.current.contains(e.target)) {
+      setModalOpen(false);
     }
-
-    if (!formData.email || !formData.email.includes('@')) {
-      tempErrors.email = 'Invalid email. Please check your email address.';
-    }
-
-    if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
-      tempErrors.phone = 'Invalid phone number. Please enter a 10-digit phone number.';
-    }
-
-    if (!formData.dob || !isValidDob(formData.dob)) {
-      tempErrors.dob = 'Invalid date of birth. Date of birth cannot be in the future.';
-    }
-
-    return tempErrors;
-  };
-
-  const isValidDob = (dob) => {
-    const selectedDate = new Date(dob);
-    const today = new Date();
-
-    // Reset time components to compare only the date
-    today.setHours(0, 0, 0, 0);
-
-    // Check if selected date is in the future
-    return selectedDate <= today;
-  };
-
-  const handlePhoneInput = (e) => {
-    const cleaned = e.target.value.replace(/\D/g, ''); // Remove non-digit characters
-    setFormData({
-      ...formData,
-      phone: cleaned
-    });
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    const formErrors = validateForm();
+    const username = usernameRef.current.value;
+    const email = emailRef.current.value;
+    const phone = phoneRef.current.value;
+    const dob = dobRef.current.value;
 
-    if (Object.keys(formErrors).length === 0) {
-      alert('Form submitted successfully!');
-      handleCloseModal();
-    } else {
-      setErrors(formErrors);
-      Object.values(formErrors).forEach(error => alert(error));
+    if (!email.includes("@")) {
+      alert("Invalid email");
+      return;
     }
+
+    if (!/^\d{10}$/.test(phone)) {
+      alert("Invalid phone number");
+      return;
+    }
+
+    const today = new Date();
+    const selectedDate = new Date(dob);
+    if (selectedDate > today) {
+      alert("Invalid date of birth");
+      return;
+    }
+
+    e.preventDefault();
+    // If all validations pass, you can perform further actions here
+    setModalOpen(false);
   };
 
   return (
-    <div className="App">
-      <h1>User Details Modal</h1>
-      <button onClick={handleOpenModal}>Open Form</button>
-
-      {isModalOpen && (
-        <div className="modal" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Fill Details</h2>
-            <form onSubmit={handleSubmit}>
-              <div>
-                <label>Username:</label>
-                <input
-                  type="text"
-                  id="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  ref={usernameRef}
-                />
-                {errors.username && (
-                  <p ref={el => (errorRefs.current[0] = el)}>{errors.username}</p>
-                )}
-              </div>
-              <div>
-                <label>Email Address:</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  ref={emailRef}
-                />
-                {errors.email && (
-                  <p ref={el => (errorRefs.current[1] = el)}>{errors.email}</p>
-                )}
-              </div>
-              <div>
-                <label>Phone Number:</label>
-                <input
-                  type="text"
-                  id="phone"
-                  value={formData.phone}
-                  onChange={handlePhoneInput}
-                  maxLength="10"
-                  ref={phoneRef}
-                />
-                {errors.phone && (
-                  <p ref={el => (errorRefs.current[2] = el)}>{errors.phone}</p>
-                )}
-              </div>
-              <div>
-                <label>Date of Birth:</label>
-                <input
-                  type="date"
-                  id="dob"
-                  value={formData.dob}
-                  onChange={handleChange}
-                  ref={dobRef}
-                />
-                {errors.dob && (
-                  <p ref={el => (errorRefs.current[3] = el)}>{errors.dob}</p>
-                )}
-              </div>
-              <button type="submit" className="submit-button">Submit</button>
-            </form>
-          </div>
+    <div className="App" onClick={handleOutsideClick}>
+    <h1>User Details Modal</h1>
+    <button type="button" className="modal-button" onClick={handleOpenModal}>
+      Open Form
+    </button>
+    {modalOpen && (
+      <div className="modal" onClick={handleOutsideClick}>
+        <div className="modal-content" ref={formRef}>
+          <form onSubmit={handleSubmit}>
+            <h3>Fill Details</h3>
+            <label htmlFor="username">Username:</label>
+            <input type="text" id="username" ref={usernameRef} required />
+            <label htmlFor="email">Email:</label>
+            <input type="email" id="email" ref={emailRef} required />
+            <label htmlFor="phone">Phone Number:</label>
+            <input type="tel" id="phone" ref={phoneRef} required />
+            <label htmlFor="dob">Date of Birth:</label>
+            <input type="date" id="dob" ref={dobRef} required />
+            <button
+              type="submit"
+              className="submit-button"
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
+          </form>
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
+    )}
+  </div>
+);
+};
 
 export default XModal;
