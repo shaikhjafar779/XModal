@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 function XModal() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -11,19 +11,45 @@ function XModal() {
 
   const [errors, setErrors] = useState({});
 
+  // Refs for inputs and error messages
+  const usernameRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const dobRef = useRef(null);
+  const errorRefs = useRef([]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      // Focus on the username input when the modal opens
+      if (usernameRef.current) {
+        usernameRef.current.focus();
+      }
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      // Scroll to the first error message
+      const firstErrorRef = errorRefs.current.find(ref => ref);
+      if (firstErrorRef) {
+        firstErrorRef.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [errors]);
+
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-     setFormData({
-        username: '',
-        email: '',
-        phone: '',
-        dob: ''
-      });
-      setErrors('')
+    setFormData({
+      username: '',
+      email: '',
+      phone: '',
+      dob: ''
+    });
+    setErrors({});
   };
 
   const handleChange = (e) => {
@@ -39,7 +65,7 @@ function XModal() {
     if (!formData.username) {
       tempErrors.username = 'Username is required';
     }
-    
+
     if (!formData.email || !formData.email.includes('@')) {
       tempErrors.email = 'Invalid email. Please check your email address.';
     }
@@ -81,12 +107,6 @@ function XModal() {
     if (Object.keys(formErrors).length === 0) {
       alert('Form submitted successfully!');
       handleCloseModal();
-      setFormData({
-        username: '',
-        email: '',
-        phone: '',
-        dob: ''
-      });
     } else {
       setErrors(formErrors);
       Object.values(formErrors).forEach(error => alert(error));
@@ -110,8 +130,11 @@ function XModal() {
                   id="username"
                   value={formData.username}
                   onChange={handleChange}
+                  ref={usernameRef}
                 />
-                {errors.username && <p>{errors.username}</p>}
+                {errors.username && (
+                  <p ref={el => (errorRefs.current[0] = el)}>{errors.username}</p>
+                )}
               </div>
               <div>
                 <label>Email Address:</label>
@@ -120,8 +143,11 @@ function XModal() {
                   id="email"
                   value={formData.email}
                   onChange={handleChange}
+                  ref={emailRef}
                 />
-                {errors.email && <p>{errors.email}</p>}
+                {errors.email && (
+                  <p ref={el => (errorRefs.current[1] = el)}>{errors.email}</p>
+                )}
               </div>
               <div>
                 <label>Phone Number:</label>
@@ -131,8 +157,11 @@ function XModal() {
                   value={formData.phone}
                   onChange={handlePhoneInput}
                   maxLength="10"
+                  ref={phoneRef}
                 />
-                {errors.phone && <p>{errors.phone}</p>}
+                {errors.phone && (
+                  <p ref={el => (errorRefs.current[2] = el)}>{errors.phone}</p>
+                )}
               </div>
               <div>
                 <label>Date of Birth:</label>
@@ -141,8 +170,11 @@ function XModal() {
                   id="dob"
                   value={formData.dob}
                   onChange={handleChange}
+                  ref={dobRef}
                 />
-                {errors.dob && <p>{errors.dob}</p>}
+                {errors.dob && (
+                  <p ref={el => (errorRefs.current[3] = el)}>{errors.dob}</p>
+                )}
               </div>
               <button type="submit" className="submit-button">Submit</button>
             </form>
